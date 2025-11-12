@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: development  # Switch to "production" for deployment
+    container_name: volt-fleet-backend
+    ports:
+      - '3000:3000'
+    depends_on:
+      volt-fleet-db:
+        condition: service_healthy
+      volt-fleet-cache-house:
+        condition: service_healthy
+      volt-fleet-mongodb:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - volt-fleet-network
+    restart: unless-stopped
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    # For production, remove volumes and use:
+    # command: ["dumb-init", "node", "dist/main.js"]
+
+  volt-fleet-db:
+    image: postgres:15-alpine
+    container_name: volt-fleet-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - volt-fleet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command: ["postgres", "-c", "listen_addresses=*"]
+
+  volt-fleet-cache-house:
+    image: redis:7-alpine
+    container_name: volt-fleet-redis
+    restart: unless-stopped
+    networks:
+      - volt-fleet-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  volt-fleet-mongodb:
+    image: mongo:7.0
+    container_name: volt-fleet-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - volt-fleet-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  volt-fleet-network:
+    driver: bridge
+
+volumes:
+  db-data:
+  mongo-data:
