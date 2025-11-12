@@ -10,8 +10,8 @@ import { TransformInterceptor } from 'config/interceptors/transform.interceptor'
 // import { SeedService } from './seed/seed.service.ts';
 import { TrimInputPipe } from 'config/validations';
 import { json, urlencoded } from 'express';
-// import { RequestContextService } from './request-context/request-context.service';
-// import { RequestContextInterceptor } from './request-context/request-context.interceptor';
+import { RequestContextService } from './request-context/request-context.service';
+import { RequestContextInterceptor } from './request-context/request-context.interceptor';
 import { HttpErrorFilter } from 'config/logger/http-error.filter';
 
 async function bootstrap() {
@@ -40,8 +40,8 @@ async function bootstrap() {
   app.use(json({ limit: '100mb' }));
   app.use(urlencoded({ extended: true, limit: '100mb' }));
 
-  // const contextService = app.get(RequestContextService);
-  // app.useGlobalInterceptors(new RequestContextInterceptor(contextService));
+  const contextService = app.get(RequestContextService);
+  app.useGlobalInterceptors(new RequestContextInterceptor(contextService));
 
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(new HttpErrorFilter());
