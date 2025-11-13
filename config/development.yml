@@ -1,0 +1,16 @@
+db:
+  host: ${DATABASE_HOST}
+  username: ${DATABASE_USERNAME}
+  password: ${DATABASE_PASSWORD}
+  database: ${DATABASE_NAME}
+  port: ${DATABASE_PORT}
+  synchronize: true
+  typeOrmSync: true
+
+jwt:
+  secret: ${JWT_SECRET}
+
+# email:
+#   user: ${EMAIL_USER}
+#   pass: ${EMAIL_PASS}
+#   server: ${EMAIL_SERVER}
