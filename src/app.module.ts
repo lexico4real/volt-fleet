@@ -14,6 +14,7 @@ import { mongooseConfig } from 'config/db/mongoose';
 import { BaseEntitySubscriber } from './subscribers/base-entity.subscriber';
 import { VehicleModule } from './vehicle/vehicle.module';
 import { NotificationModule } from './notification/notification.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { NotificationModule } from './notification/notification.module';
     AuthModule,
     VehicleModule,
     NotificationModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [AppService, RequestContextService, BaseEntitySubscriber],
