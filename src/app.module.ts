@@ -12,6 +12,8 @@ import { BullModule } from '@nestjs/bull';
 import { getTypeOrmConfig } from 'config/db';
 import { mongooseConfig } from 'config/db/mongoose';
 import { BaseEntitySubscriber } from './subscribers/base-entity.subscriber';
+import { VehicleModule } from './vehicle/vehicle.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { BaseEntitySubscriber } from './subscribers/base-entity.subscriber';
     }),
     CacheModule,
     AuthModule,
+    VehicleModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService, RequestContextService, BaseEntitySubscriber],
