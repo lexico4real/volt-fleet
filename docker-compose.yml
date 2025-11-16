@@ -1,7 +1,6 @@
-version: '3.8'
-
 services:
   app:
+    user: root
     build:
       context: .
       target: development  # Switch to "production" for deployment
@@ -25,6 +24,7 @@ services:
       - /usr/src/app/node_modules
     # For production, remove volumes and use:
     # command: ["dumb-init", "node", "dist/main.js"]
+    command: ["npm", "run", "start:dev"] # remove for production
 
   volt-fleet-db:
     image: postgres:15-alpine

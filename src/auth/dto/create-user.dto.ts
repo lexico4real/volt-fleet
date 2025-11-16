@@ -2,7 +2,6 @@ import {
   IsEmail,
   IsEnum,
   IsOptional,
-  IsUUID,
   Matches,
   MaxLength,
   MinLength,
