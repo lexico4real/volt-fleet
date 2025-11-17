@@ -1,85 +1,187 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# **Volt Fleet – IoT Architecture (NestJS + AWS)**
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A scalable, event-driven IoT telemetry platform for electric vehicles (EVs).
+Designed to ingest real-time data from thousands of vehicles, process it, store it efficiently, trigger alerts, and provide live dashboards for fleet operators.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This project is part of a system design assessment and focuses on architectural reasoning, AWS cloud services, backend structure, and telemetry processing.
 
-## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
+## **Overview**
 
-```bash
-$ npm install
+Modern EV fleets generate a continuous stream of telemetry:
+GPS location, battery SOC, temperature, speed, and diagnostics.
+This platform provides:
+
+* High-volume ingestion via AWS IoT Core
+* Real-time stream processing (Kinesis + Lambda)
+* Time-series storage for analytics (Timestream / S3)
+* Operational data via PostgreSQL
+* Real-time dashboards using NestJS WebSockets
+* Automated alerting for fleet managers
+
+
+
+## **Architecture Diagram**
+
+<img src="./volt-fleet-architecture.png" width="800" />
+
+**Data Flow:**
+**Vehicle → AWS IoT Core → Kinesis Stream → Lambda → Timestream/S3/Postgres → API (NestJS) → Dashboard & Alerts**
+
+
+
+## **Technology Choices**
+
+### **Backend**
+
+* **NestJS (Node.js, TypeScript)**– modular, scalable, enterprise-ready.
+* **WebSockets Gateway**– live telemetry updates.
+
+### **AWS Services**
+
+* **AWS IoT Core**– secure ingestion (MQTT/HTTPS).
+* **Kinesis Data Streams**– durable, scalable streaming buffer.
+* **AWS Lambda**– serverless event processing.
+* **Amazon Timestream**– optimized time-series store.
+* **Amazon S3 + Firehose**– long-term, low-cost analytics storage.
+* **Amazon RDS (PostgreSQL)**– fleet/vehicle relational data.
+* **EventBridge + SNS**– rules-based alerts.
+* **CloudWatch + X-Ray**– observability, metrics, tracing.
+
+
+
+## **Scalability & Reliability**
+
+* Horizontally scalable ingestion via IoT Core + Kinesis shards
+* Fully serverless processing layer
+* Multi-AZ RDS + autoscaling
+* Durable S3 cold storage
+* WebSocket cluster backed by Redis Pub/Sub
+* Backpressure protection via Kinesis consumer lag alarms
+
+Failures are isolated at each stage with retries, DLQs, and circuit breaking.
+
+
+
+## **Telemetry Endpoints (NestJS)**
+
+### **POST /telemetry/ingest**
+
+Ingest real-time telemetry from vehicles.
+
+### **GET /telemetry/:vehicleId/latest**
+
+Fetch latest known telemetry record.
+
+### **GET /telemetry/:vehicleId/history**
+
+Query historical telemetry with pagination & date filtering.
+
+
+
+## **Entities**
+
+### **Vehicle**
+
+* id
+* fleetId
+* vin
+* model
+* status
+
+### **Telemetry**
+
+* vehicleId
+* latitude
+* longitude
+* speed
+* soc
+* temperature
+* createdAt
+
+### **Fleet**
+
+* id
+* name
+* manager
+
+
+
+## **Real-Time Dashboard**
+
+The backend exposes a WebSocket gateway:
+
+```
+ws://host/telemetry
 ```
 
-## Compile and run the project
+Events:
+
+* `telemetry.update` — emitted on every vehicle event
+* Rooms per fleet for scoped broadcasting
+
+
+
+## **Alerting Rules**
+
+* SOC < 15%
+* Speed > 120 km/h
+* Temperature > 80°C
+* No telemetry for > 5 minutes
+* Kinesis consumer lag
+
+Alerts delivered via SNS → Email/SMS or webhook.
+
+
+
+## **Monitoring**
+
+Dashboards track:
+
+* Stream throughput
+* Lambda duration & errors
+* IoT Core connection failures
+* Database load
+* Fleet-level SOC distribution
+* Live vehicle map
+
+
+
+## **Folder Structure**
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+src/
+  telemetry/
+    telemetry.controller.ts
+    telemetry.service.ts
+    telemetry.gateway.ts
+    dto/
+    entities/
+  vehicles/
+  notification/
+  fleets/
+  common/
+  ...
 ```
 
-## Run tests
+
+
+## **Local Development**
+
+Clone the repo:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+git clone https://github.com/<your-username>/volt-fleet.git
+cd ev-telemetry-platform
+yarn install
+yarn start:dev
 ```
 
-## Resources
 
-Check out a few resources that may come in handy when working with NestJS:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## **Summary**
 
-## Support
+This project demonstrates a production-grade telemetry architecture combining IoT, serverless processing, time-series analytics, and real-time monitoring, optimized for thousands of concurrent vehicles and fleet managers. Here is the link to the project document: https://docs.google.com/document/d/19Orn386o4Sti1kSX8til-DNrfm_20Jvmb1BYRs504hM/edit?tab=t.0
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

@@ -15,6 +15,7 @@ import { BaseEntitySubscriber } from './subscribers/base-entity.subscriber';
 import { VehicleModule } from './vehicle/vehicle.module';
 import { NotificationModule } from './notification/notification.module';
 import { AuditModule } from './audit/audit.module';
+import { TelemetryModule } from './telemetry/telemetry.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { AuditModule } from './audit/audit.module';
     VehicleModule,
     NotificationModule,
     AuditModule,
+    TelemetryModule,
   ],
   controllers: [AppController],
   providers: [AppService, RequestContextService, BaseEntitySubscriber],
